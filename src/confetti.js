@@ -14,7 +14,8 @@ export default function ConfettiGenerator(params) {
     rotate: false, // Whenever to rotate a prop
     start_from_edge: false, // Should confettis spawn at the top/bottom of the screen?
     width: window.innerWidth, // canvas width (as int, in px)
-    height: window.innerHeight // canvas height (as int, in px)
+    height: window.innerHeight, // canvas height (as int, in px)
+    direction: 'down'
   };
 
   //////////////
@@ -44,6 +45,8 @@ export default function ConfettiGenerator(params) {
       appstate.height = params.height;
     if(params.rotate !== undefined && params.rotate !== null)
       appstate.rotate = params.rotate;
+    if(params.direction)
+      appstate.direction = params.direction;
   }
 
   //////////////
@@ -94,10 +97,40 @@ export default function ConfettiGenerator(params) {
   // Confetti particle generator
   function particleFactory() {
     var prop = appstate.props[selectProp()];
+    
+    if (appstate.start_from_edge and appstate.clock >= 0 and appstate.direction === 'down') {
+      x = rand(appstate.width);
+      y = -10;        
+    } else if (appstate.start_from_edge and appstate.clock < 0 and appstate.direction === 'down') {
+      x = rand(appstate.width);
+      y = parseFloat(appstate.height) + 10;
+    } else if (appstate.start_from_edge and appstate.clock >= 0 and appstate.direction === 'up') {
+      x = rand(appstate.width);
+      y = parseFloat(appstate.height) + 10;
+    } else if (appstate.start_from_edge and appstate.clock < 0 and appstate.direction === 'up') {
+      x = rand(appstate.width);
+      y = -10
+    } else if (appstate.start_from_edge and appstate.clock >= 0 and appstate.direction === 'left') {
+      x = -10;
+      y = rand(appstate.height);
+    } else if (appstate.start_from_edge and appstate.clock < 0 and appstate.direction === 'left') {
+      x = parseFloat(appstate.width) + 10;
+      y = rand(appstate.height);
+    } else if (appstate.start_from_edge and appstate.clock >= 0 and appstate.direction === 'right') {
+      x = parseFloat(appstate.width) + 10;
+      y = rand(appstate.height);
+    } else if (appstate.start_from_edge and appstate.clock < 0 and appstate.direction === 'right') {
+      x = -10
+      y = rand(appstate.height);
+    } else {
+      x = rand(appstate.width);
+      y = rand(appstate.height);
+    }
+          
     var p = {
       prop: prop.type ? prop.type : prop, //prop type
-      x: rand(appstate.width), //x-coordinate
-      y: appstate.start_from_edge ? (appstate.clock >= 0 ? -10 : parseFloat(appstate.height) + 10) : rand(appstate.height), //y-coordinate
+      x: x, //x-coordinate
+      y: y, //y-coordinate
       src: prop.src,
       radius: rand(4) + 1, //radius
       size: prop.size,
@@ -220,7 +253,7 @@ export default function ConfettiGenerator(params) {
             if (p.rotate)
               p.rotation += p.speed / 35;
 
-            if ((p.speed >= 0 && p.y > appstate.height) || (p.speed < 0 && p.y < 0)) {
+            if (appstate.direction === 'down' and (p.speed >= 0 && p.y > appstate.height) || (p.speed < 0 && p.y < 0)) {
               if(appstate.respawn) {
                 particles[i] = p;
                 particles[i].x = rand(appstate.width, true);
@@ -228,6 +261,30 @@ export default function ConfettiGenerator(params) {
               } else {
                 particles[i] = undefined;
               }
+            } else if (appstate.direction === 'up' and (p.speed >= 0 && p.y < appstate.height) || (p.speed < 0 && p.y > 0)) {
+              if(appstate.respawn) {
+                particles[i] = p;
+                particles[i].x = rand(appstate.width, true);
+                particles[i].y = p.speed >= 0 ? parseFloat(appstate.height)+10 : -10;
+              } else {
+                particles[i] = undefined;
+              }              
+            } else if (appstate.direction === 'left' and (p.speed >= 0 && p.x > appstate.width) || (p.speed < 0 && p.x < 0)) {
+              if(appstate.respawn) {
+                particles[i] = p;
+                particles[i].x = p.speed >= 0 ? -10 : parseFloat(appstate.width);
+                particles[i].y = rand(appstate.height, true);
+              } else {
+                particles[i] = undefined;
+              }              
+            } else if (appstate.direction === 'right' and (p.speed >= 0 && p.x < appstate.width) || (p.speed < 0 && p.x > 0)) {
+              if(appstate.respawn) {
+                particles[i] = p;
+                particles[i].x = p.speed >= 0 ? parseFloat(appstate.width) : -10;
+                particles[i].y = rand(appstate.height, true);                
+              } else {
+                particles[i] = undefined;
+              }              
             }
           }
         }
